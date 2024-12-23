@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "build_version"
+version = "0.0.1"
+description = "This library provides an executable to create build versions that works with GitHub Actions"
+authors = ["Bock Yang Goh <bockyanggoh@gmail.com"]
+package-mode = true
+packages = [
+  { include = "build_version"}
+]
+include = [
+  { path = "build_Version" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+gitpython = "^3.1.43"
+semver = "^3.0.2"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^6.2.5"
+pytest-mock = "^3.6.1"
+pre-commit = "^3.7.1"
+behave = "^1.2.6"
+assertpy = "^1.1"
+requests-mock = "^1.12.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Poetry
+.venv/
+.poetry/
+.poetryenv/
+dist/
+build/
+*.egg-info/
+
+# Other
+.Python
+.env
+env/
+venv/
+pip-log.txt
+coverage.*
+htmlcov/
+.tox/
+.nox/
+.vscode/
+.idea/
