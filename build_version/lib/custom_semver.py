@@ -1,50 +1,33 @@
 import semver
-from git import Repo
 import requests
 import os
 import re
 import logging
-from build_version.lib.interfaces import ReleaseType, VersionIncrementType
+from build_version.common.interfaces import ReleaseType
+from build_version.common.utils import check_release_type
+from build_version.lib.interfaces import VersionIncrementType
 from build_version.lib.utils import generate_random_string
+from build_version.common.process_base import ProcessBase
 
 logger = logging.getLogger(__name__)
 log_level = os.environ.get("LOG_LEVEL", "INFO")
 
-
-class ProcessSemVer:
-  _private_token: str
-  _output_file: str
-  _repo: Repo
-  
-  def __init__(self, repo_path: str, output_file: str, token: str):
-    self._repo = Repo(path=repo_path)
-    self._output_file = output_file
-    self._private_token = token
-    
-  @staticmethod
-  def check_release_type() -> ReleaseType:
-    ref_name = os.environ.get("GITHUB_REF", "")
-    if re.match(r".+/merge", ref_name):
-      return ReleaseType.BETA
-    elif ref_name == "main":
-      return ReleaseType.RELEASE
-    else:
-      return ReleaseType.ALPHA
+class ProcessSemVer(ProcessBase):
+  def __init__(self, **data):
+    super().__init__(**data)
 
   def get_increment_type(self) -> VersionIncrementType:
     repo = os.environ.get("GITHUB_REPOSITORY")
-    ref_name = os.environ.get("GITHUB_REF")
     
-    if not (repo and ref_name and self._private_token):
+    if not (repo and self._ref_name and self._private_token):
       return VersionIncrementType.PATCH
-
     headers = {
       "Accept": "application/vnd.github+json",
       "Authorization": f"Bearer {self._private_token}",
       "X-GitHub-Api-Version": "2022-11-28"
     }
     base_url = f"https://api.github.com/repos/{repo}"
-    
+
     if re.fullmatch(r"^[0-9]+/merge$", ref_name):
       return VersionIncrementType.PATCH
     commit_sha = os.environ.get("GITHUB_SHA", "")
@@ -119,14 +102,9 @@ class ProcessSemVer:
     else:
       logger.error(f"Invalid release type: {release_type}")
       raise ValueError(f"Invalid release type: {release_type}")
-  
-  def write_to_file(self, version: str):
-    with open(self._output_file, 'w') as f:
-      if self._output_file.split('.')[-1] == "env":
-        f.write(f"BUILD_VERSION={version}\n")
-  
+
   def run(self) -> str:
-    release_type = self.check_release_type()
+    release_type = check_release_type(self._ref_name)
     increment_type = self.get_increment_type()
     version = self.generate_version(release_type, increment_type)
     logger.debug(f"Release type: {release_type}")
